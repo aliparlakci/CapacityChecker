@@ -16,6 +16,11 @@ def sendNotification(apiKey,message1,message2):
     report["value2"] = message2
     requests.post("https://maker.ifttt.com/trigger/seat_available/with/key/"+apiKey, data=report)
 
+def generateNotificationTexts(course_info):
+    title = f"{course_info['crn']} - {course_info['code']} {course_info['section']}"
+    details = f"{course_info['availability']} seat available."
+    return title, details
+
 def getCourseHtml(crn):
     course_path = "https://suis.sabanciuniv.edu/prod/bwckschd.p_disp_detail_sched?term_in=201902&crn_in="
     return urllib.request.urlopen(course_path+crn).read().decode()
@@ -53,22 +58,19 @@ def main():
 
             print(f"{crn} - {course_info['code']} {course_info['section']} >> {course_info['availability']}",end="")
 
-            # TODO
-            # Bug: Program doesn't send notification
-            # if there are available seats on the first check
-
             if not crn in prevAvailability:
+                if course_info["availability"] != 0:
+                    sendNotification(apiKey, *generateNotificationTexts(course_info))
+                    print(", notification sent!",end="")
                 prevAvailability[crn] = course_info["availability"]
 
             if (course_info["availability"] != 0) and (not prevAvailability[crn] == course_info["availability"]):
-                title = f"{crn} - {course_info['code']} {course_info['section']}"
-                details = f"{course_info['availability']} seat available."
-                sendNotification(apiKey, title, details)
-                prevAvailability[crn] = course_info["availability"]
-                print(", notification sent!")
-            
-            print()
+                sendNotification(apiKey, *generateNotificationTexts(course_info))
 
+                prevAvailability[crn] = course_info["availability"]
+                
+            print()
+        print()
         sleep(1)
 
 try:
