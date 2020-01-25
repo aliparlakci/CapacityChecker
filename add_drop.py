@@ -4,10 +4,19 @@ from bs4 import BeautifulSoup
 from time import sleep
 import pprint
 
-def getApiKey(config_file):
+def createApiKeyFile():
+    apiKey = input("Enter your API Key: ")
+    with open("api_key.txt","w+") as f:
+        f.write(apiKey)
+    return apiKey
+
+def getApiKey():
     apiKey = ""
-    with open(config_file,"r") as f:
-        apiKey = f.readlines()[0]
+    try:
+        with open("api_key.txt","r") as f:
+            apiKey = f.readlines()[0]
+    except FileNotFoundError:
+        apiKey = createApiKeyFile()
     return apiKey
 
 def sendNotification(apiKey,message1,message2):
@@ -49,7 +58,7 @@ def getCrnCodes():
 def main():
     prevAvailability = {}
     crn_codes = getCrnCodes()
-    apiKey = getApiKey("api_key.txt")
+    apiKey = getApiKey()
     while True:
         for crn in crn_codes:
             soup = BeautifulSoup(getCourseHtml(crn), 'html.parser')
@@ -71,7 +80,6 @@ def main():
                 
             print()
         print()
-        sleep(1)
 
 try:
     main()
